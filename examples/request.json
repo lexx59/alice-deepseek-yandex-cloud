@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "session": {
+    "skill_id": "YOUR_SKILL_ID",
+    "user": { "user_id": "example-user" },
+    "new": false,
+    "message_id": 1,
+    "session_id": "example-session"
+  },
+  "request": {
+    "command": "сколько будет два плюс два",
+    "original_utterance": "Сколько будет два плюс два? Ответь кратко.",
+    "type": "SimpleUtterance"
+  },
+  "state": { "session": {}, "user": {} }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "alice-deepseek-yandex-cloud",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Приватный навык Алисы с DeepSeek через Yandex Cloud Functions и AI Studio",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" }
+}
