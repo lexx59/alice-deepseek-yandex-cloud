@@ -99,24 +99,23 @@ test('timeout is safe, counted, and never leaks credentials or exception content
   assert.equal(result.user_state_update.quota.used, 1);
   assert.doesNotMatch(JSON.stringify(result), /secret|test-only/);
 });
-test('any phrase polls the previous answer and explicitly asks to repeat a new question', async () => {
+test('any phrase retrieves only the pending answer without assuming a new question or creating a generation', async () => {
   const handler = createHandler({ env, fetchImpl: async (url, options) => {
     assert.equal(options.method, 'GET');
     return { ok: true, json: async () => ({ status: 'completed', output_text: 'Первый ответ.' }) };
   } });
   const result = await handler(event('другой вопрос', { session: { pending: 'job', question: 'первый вопрос' } }), context);
-  assert.match(result.response.text, /Первый ответ/);
-  assert.match(result.response.text, /Новый вопрос задайте ещё раз/);
+  assert.equal(result.response.text, 'Первый ответ.');
   assert.equal(result.session_state.pending, undefined);
 });
 test('voice variants retrieve completed legacy pending requests without starting generation', async () => {
-  for (const phrase of ['Готово!', 'Ну, уже готово?', 'скажи ответ', 'да', 'ответ готов']) {
+  for (const phrase of ['Готово!', 'Ну, уже готово?', 'скажи ответ', 'да', 'ну что?', 'ответ готов']) {
     const handler = createHandler({ env, fetchImpl: async (url, options) => {
       assert.equal(options.method, 'GET');
       return { ok: true, json: async () => ({ status: 'completed', output_text: 'Получилось.' }) };
     } });
     const result = await handler(event(phrase, { session: { pending: 'legacy', question: 'вопрос' } }), context);
-    assert.match(result.response.text, /Получилось/);
+    assert.equal(result.response.text, 'Получилось.');
     assert.equal(result.session_state.pending, undefined);
   }
 });
