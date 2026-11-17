@@ -15,7 +15,7 @@ function createHandler({ env = process.env, fetchImpl = fetch, now = () => new D
   return async function handler(event, context = {}) {
     // One budget covers submission, response-body reads, pauses and polling together.
     const remainingRuntime = context.getRemainingTimeInMillis?.();
-    const budget = Number.isFinite(remainingRuntime) ? Math.max(0, Math.min(3000, remainingRuntime - 300)) : 3000;
+    const budget = Number.isFinite(remainingRuntime) ? Math.max(0, Math.min(3500, remainingRuntime - 300)) : 3500;
     const deadline = monotonic() + budget;
     const remaining = () => Math.max(0, Math.floor(deadline - monotonic()));
     const state = structuredClone(event.state?.session || {});
@@ -64,7 +64,7 @@ function createHandler({ env = process.env, fetchImpl = fetch, now = () => new D
       return reply('Не настроен доступ обработчика к модели.');
     const headers = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json',
       'x-project': env.YANDEX_FOLDER_ID, 'x-data-logging-enabled': 'false' };
-    const request = async (url, body, maxWait = 2800) => {
+    const request = async (url, body, maxWait = 3300) => {
       const timeout = Math.min(maxWait, remaining());
       if (timeout < 50) throw new Error('invocation_budget');
       const response = await fetchImpl(url, { method: body ? 'POST' : 'GET', headers,
@@ -78,7 +78,7 @@ function createHandler({ env = process.env, fetchImpl = fetch, now = () => new D
     };
     async function waitForReady(data) {
       let polls = 0;
-      while (['queued', 'in_progress'].includes(data.status) && polls < 12 && remaining() > 250) {
+      while (['queued', 'in_progress'].includes(data.status) && polls < 20 && remaining() > 250) {
         await sleep(Math.min(200, remaining() - 200));
         if (remaining() < 150) break;
         try {
