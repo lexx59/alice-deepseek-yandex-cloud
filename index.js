@@ -118,12 +118,7 @@ function createHandler({ env = process.env, fetchImpl = fetch, now = () => new D
       try {
         const data = await request(API + '/' + encodeURIComponent(state.pending));
         state.pendingErrors = 0;
-        const result = consume(data);
-        const isPoll = /^(?:(?:ну|уже|теперь|да|скажи|пожалуйста) )*(?:готово|готов|ответ|продолжай|дальше|читай)(?: .*)?$/.test(command);
-        if (!state.pending && (data.status === 'completed' || data.status === 'incomplete') && !isPoll && outputText(data)) {
-          result.response.text = truncate('Ответ на предыдущий вопрос: ' + result.response.text, 850) + ' Новый вопрос задайте ещё раз.';
-        }
-        return result;
+        return consume(data);
       } catch (error) {
         state.pendingErrors = (Number(state.pendingErrors) || 0) + 1;
         if ([400, 404, 410].includes(error.status) || state.pendingErrors >= 3) {
