@@ -47,13 +47,31 @@ test('a fast background result is returned in the original turn without a waitin
   assert.equal(result.session_state.pending, undefined);
   assert.equal(result.user_state_update.quota.used, 1);
   assert.equal(posts, 1);
-  assert.ok(clock < 3000);
+  assert.ok(clock < 3500);
+});
+
+test('an answer ready after three seconds is delivered within the 3.5-second budget', async () => {
+  let clock = 0;
+  let posts = 0;
+  const handler = createHandler({ env, monotonic: () => clock, sleep: async ms => { clock += ms; },
+    fetchImpl: async (url, options) => {
+      clock += 100;
+      if (options.method === 'POST') posts++;
+      return { ok: true, json: async () => clock >= 3300
+        ? { id: 'later', status: 'completed', output_text: 'Ответ после трёх секунд.' }
+        : { id: 'later', status: 'in_progress' } };
+    } });
+  const result = await handler(event('вопрос'), { ...context, getRemainingTimeInMillis: () => 4000 });
+  assert.equal(result.response.text, 'Ответ после трёх секунд.');
+  assert.equal(result.session_state.pending, undefined);
+  assert.equal(posts, 1);
+  assert.ok(clock > 3000 && clock < 3500);
 });
 test('slow submission leaves no extra polling budget and preserves task for the next turn', async () => {
   let clock = 0;
   let calls = 0;
   const handler = createHandler({ env, monotonic: () => clock, sleep: () => assert.fail('no pause budget'),
-    fetchImpl: async () => { calls++; clock = 2800; return { ok: true, json: async () => ({ id: 'slow', status: 'queued' }) }; } });
+    fetchImpl: async () => { calls++; clock = 3300; return { ok: true, json: async () => ({ id: 'slow', status: 'queued' }) }; } });
   const result = await handler(event('вопрос'), context);
   assert.equal(result.response.text, 'Пу пу пу, тут надо подумать');
   assert.equal(result.session_state.pending, 'slow');
